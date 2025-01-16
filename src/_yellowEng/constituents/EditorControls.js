@@ -84,12 +84,12 @@ export default class EditorControls {
 
     if (
       Physics.Raycast(
-        transform.position, 
+        transform.position,
         transform.TransformDirection(Vector3.forward),
-        Mathf.Infinity, 
-        layerMask))
-
-      { 
-
+        Mathf.Infinity,
+        layerMask
+      )
+    ) {
+    }
   }
 }
