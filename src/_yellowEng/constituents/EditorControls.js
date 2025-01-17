@@ -81,15 +81,5 @@ export default class EditorControls {
       _euler.x = Math.max(_PI_2 - Math.PI, Math.min(_PI_2 - 0, _euler.x));
       camera.quaternion.setFromEuler(_euler);
     }
-
-    if (
-      Physics.Raycast(
-        transform.position,
-        transform.TransformDirection(Vector3.forward),
-        Mathf.Infinity,
-        layerMask
-      )
-    ) {
-    }
   }
 }

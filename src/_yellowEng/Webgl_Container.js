@@ -24,7 +24,7 @@ export default class Webgl_Container {
     this.scene = Helper.setupDefaultScene(this.gizmos, this.main, this.light);
     this.camera_dolly = Helper.setupDolly(this.#camera, this.scene);
     this.#camera.add(this.dummyCam);
-    Raycasting.setObjectGrpah(this.main)
+    Raycasting.setWebgl(this);
   }
   getCamera() {
     let camera = this.#camera;
@@ -91,7 +91,7 @@ export default class Webgl_Container {
     }
   }
   reset() {
-    this.removeEventListeners()
+    this.removeEventListeners();
     this.#camera = Helper.initializeCamera();
     this.scene.remove(this.camera_dolly);
     this.camera_dolly = Helper.setupDolly(this.#camera, this.scene);

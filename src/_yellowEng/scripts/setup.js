@@ -5,10 +5,8 @@ import { InfiniteGridHelper } from "../helpers/InfiniteGridHelper";
 import { Sky } from "three/addons/objects/Sky.js";
 import { addCube, drawLine } from "../creation/add";
 import EditorControls from "../constituents/EditorControls";
-
 const Snap2GridValue = 50;
 const webgl = new WebglVr_Container();
-
 const grid = new InfiniteGridHelper(1, 1);
 grid.position.set(0, 0.01, 0);
 grid.renderOrder = -1;
@@ -67,8 +65,8 @@ webgl.addGizmo(line);
 
 function raycast() {
   try {
-    let camera = webgl.getCamera();
-    let intersects = Raycasting.cast(camera.position, camera.getWorldDirection());
+    const intersects = Raycasting.cast() //.intersectObjects(webgl.main.children);
+
     let intersect = intersects[0];
     if (intersect && intersect.face) {
       let normal = intersect.face.normal.clone();
