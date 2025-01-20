@@ -49,8 +49,11 @@ export default class Webgl_Container {
       }
     }
   }
-  addEntity(entity) {
+  add2Entity(entity) {
     this.#entities.push(entity);
+    this.add2Update(function (detaTime) {
+      entity.update(detaTime);
+    });
   }
   add2Update(fun) {
     this.#updates.push(fun);
@@ -64,8 +67,11 @@ export default class Webgl_Container {
     this.setUpEventListeners();
   }
   setUpEventListeners() {
+    const self = this;
     Input.setUpEventListeners();
-    window.addEventListener("resize", this.resize);
+    window.addEventListener("resize", function () {
+      self.resize();
+    });
   }
   removeEventListeners() {
     Input.removeEventListeners();
@@ -91,16 +97,18 @@ export default class Webgl_Container {
     }
   }
   reset() {
+    const camera = this.getCamera();
     this.removeEventListeners();
-    this.#camera = Helper.initializeCamera();
+    camera = Helper.initializeCamera();
     this.scene.remove(this.camera_dolly);
-    this.camera_dolly = Helper.setupDolly(this.#camera, this.scene);
+    this.camera_dolly = Helper.setupDolly(camera, this.scene);
     this.mount(this.canvasElement);
   }
   resize() {
-    this.#camera.aspect =
+    const camera = this.getCamera();
+    camera.aspect =
       this.canvasElement.offsetWidth / this.canvasElement.offsetHeight;
-    this.#camera.updateProjectionMatrix();
+    camera.updateProjectionMatrix();
     this.renderer.setSize(
       this.canvasElement.offsetWidth,
       this.canvasElement.offsetHeight
@@ -108,19 +116,10 @@ export default class Webgl_Container {
   }
   async load() {
     for (let entity of this.#entities) {
-      await entity.load();
-      this.scene.add(entity.obj3DGroup);
-    }
-  }
-  start() {
-    for (let entity of this.#entities) {
-      entity.start();
+      await entity.load(this);
     }
   }
   update(detaTime) {
-    for (let entity of this.#entities) {
-      entity.update();
-    }
     for (let update of this.#updates) {
       update(detaTime);
     }

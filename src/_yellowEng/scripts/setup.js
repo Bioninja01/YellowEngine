@@ -5,6 +5,7 @@ import { InfiniteGridHelper } from "../helpers/InfiniteGridHelper";
 import { Sky } from "three/addons/objects/Sky.js";
 import { addCube, drawLine } from "../creation/add";
 import EditorControls from "../constituents/EditorControls";
+
 const Snap2GridValue = 50;
 const webgl = new WebglVr_Container();
 const grid = new InfiniteGridHelper(1, 1);
@@ -17,17 +18,6 @@ box1.position.set(0, 0.5, -3);
 box1.rotateY((30 * Math.PI) / 180);
 box1.name = "box1";
 webgl.addObject3D(box1);
-
-const rollOverGeo = new THREE.BoxGeometry(1, 1, 1);
-const rollOverMaterial = new THREE.MeshBasicMaterial({
-  color: 0xff0000,
-  opacity: 0.5,
-  transparent: true,
-});
-const rollOverMesh = new THREE.Mesh(rollOverGeo, rollOverMaterial);
-webgl.addGizmo(rollOverMesh);
-
-let editorControls = new EditorControls(webgl.getCamera());
 
 let box2 = addCube(0, 0, 0);
 box2.position.set(0, 0.5, -10);
@@ -56,16 +46,16 @@ uniforms["mieCoefficient"].value = effectController.mieCoefficient;
 uniforms["mieDirectionalG"].value = effectController.mieDirectionalG;
 uniforms["sunPosition"].value.set(400000, 400000, 400000);
 
-let line = drawLine(
-  new THREE.Vector3(-0, -0, -0),
-  new THREE.Vector3(0, 5, 0),
-  0x00ffff
-);
-webgl.addGizmo(line);
+// let line = drawLine(
+//   new THREE.Vector3(-0, -0, -0),
+//   new THREE.Vector3(0, 5, 0),
+//   0x00ffff
+// );
+// webgl.addGizmo(line);
 
 function raycast() {
   try {
-    const intersects = Raycasting.cast() //.intersectObjects(webgl.main.children);
+    const intersects = Raycasting.cast(); //.intersectObjects(webgl.main.children);
 
     let intersect = intersects[0];
     if (intersect && intersect.face) {
@@ -83,9 +73,8 @@ function raycast() {
   }
 }
 
-webgl.add2Update(raycast);
-webgl.add2Update(function (detaTime) {
-  editorControls.update(detaTime);
-});
+let editorControls = new EditorControls();
+webgl.add2Entity(editorControls)
+
 
 export default webgl;
