@@ -1,4 +1,4 @@
-import WebglVr_Container from "../WebglVr_Container";
+import YellowEngine from "../YellowEngine";
 import Raycasting from "../systems/Raycast";
 import * as THREE from "three";
 import { InfiniteGridHelper } from "../helpers/InfiniteGridHelper";
@@ -7,7 +7,7 @@ import { addCube, drawLine } from "../creation/add";
 import EditorControls from "../constituents/EditorControls";
 
 const Snap2GridValue = 50;
-const webgl = new WebglVr_Container();
+const webgl = YellowEngine.webgl;
 const grid = new InfiniteGridHelper(1, 1);
 grid.position.set(0, 0.01, 0);
 grid.renderOrder = -1;
@@ -53,25 +53,25 @@ uniforms["sunPosition"].value.set(400000, 400000, 400000);
 // );
 // webgl.addGizmo(line);
 
-function raycast() {
-  try {
-    const intersects = Raycasting.cast(); //.intersectObjects(webgl.main.children);
+// function raycast() {
+//   try {
+//     const intersects = Raycasting.cast(); //.intersectObjects(webgl.main.children);
 
-    let intersect = intersects[0];
-    if (intersect && intersect.face) {
-      let normal = intersect.face.normal.clone();
-      normal.transformDirection(intersect.object.matrixWorld);
-      rollOverMesh.position.copy(intersect.point);
-      rollOverMesh.position.floor().addScalar(0.5);
-      normal.multiplyScalar(1.15);
-      let p1 = intersect.point.clone();
-      p1.add(normal);
-      line.geometry.setFromPoints([intersect.point, p1]);
-    }
-  } catch (err) {
-    console.error(err);
-  }
-}
+//     let intersect = intersects[0];
+//     if (intersect && intersect.face) {
+//       let normal = intersect.face.normal.clone();
+//       normal.transformDirection(intersect.object.matrixWorld);
+//       rollOverMesh.position.copy(intersect.point);
+//       rollOverMesh.position.floor().addScalar(0.5);
+//       normal.multiplyScalar(1.15);
+//       let p1 = intersect.point.clone();
+//       p1.add(normal);
+//       line.geometry.setFromPoints([intersect.point, p1]);
+//     }
+//   } catch (err) {
+//     console.error(err);
+//   }
+// }
 
 let editorControls = new EditorControls();
 webgl.add2Entity(editorControls)

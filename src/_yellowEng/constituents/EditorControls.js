@@ -2,6 +2,7 @@ import * as THREE from "three";
 import Input from "../systems/Input";
 import { drawLine } from "../creation/add";
 import Raycasting from "../systems/Raycast";
+import { placeCube } from "./Controls";
 
 const line = drawLine(
   new THREE.Vector3(0, 0, 0),
@@ -40,7 +41,6 @@ export default class EditorControls {
       this.#velocity.x -= this.#direction.x * 100.0 * delta;
     this.#camera.translateX(-this.#velocity.x * delta);
     this.#camera.translateZ(this.#velocity.z * delta);
-
     if (Input.GetMouseDown() && !this.#isLocked) {
       this.#isLocked = true;
       document.body.requestPointerLock();
@@ -59,7 +59,8 @@ export default class EditorControls {
       _euler.x = Math.max(_PI_2 - Math.PI, Math.min(_PI_2 - 0, _euler.x));
       this.#camera.quaternion.setFromEuler(_euler);
     }
-    this.raycast();
+    let position = this.raycast();
+    placeCube(position)
   }
   get #moveForward() {
     return Input.GetKeyDown("w");
@@ -78,14 +79,31 @@ export default class EditorControls {
       let intersects = Raycasting.cast();
       let intersect = intersects[0];
       if (intersect && intersect.face) {
+        const obj = intersect.object;
+        const faceIndex = intersect.faceIndex;
+        
+
         let normal = intersect.face.normal.clone();
+        // const faceCenter = new THREE.Vector3();
+        // intersect.face.getCenter(faceCenter);
+        // const position = new THREE.Vector3().addVectors(
+        //   faceCenter,
+        //   faceNormal.clone().multiplyScalar(1)
+        // );
+        // rollOverMesh.position.copy(position);
+
         normal.transformDirection(intersect.object.matrixWorld);
-        rollOverMesh.position.copy(intersect.point);
-        rollOverMesh.position.floor().addScalar(0.5);
-        normal.multiplyScalar(1.15);
+        
+        // rollOverMesh.position.copy(intersect.point);
+        // rollOverMesh.position.floor().addScalar(0.5);
+        normal.multiplyScalar(.5);
+
         let p1 = intersect.point.clone();
         p1.add(normal);
         line.geometry.setFromPoints([intersect.point, p1]);
+        rollOverMesh.position.copy(p1);
+        rollOverMesh.position.floor().addScalar(0.5);
+        return p1
       }
     } catch (err) {
       console.error(err);
