@@ -2,7 +2,8 @@ import * as THREE from "three";
 import Input from "../systems/Input";
 import { drawLine } from "../creation/add";
 import Raycasting from "../systems/Raycast";
-import { placeCube } from "./Controls";
+import { placeCube, removeCube,updateGeo } from "./Controls";
+import { myLog } from "../systems/Logger";
 
 const line = drawLine(
   new THREE.Vector3(0, 0, 0),
@@ -59,8 +60,16 @@ export default class EditorControls {
       _euler.x = Math.max(_PI_2 - Math.PI, Math.min(_PI_2 - 0, _euler.x));
       this.#camera.quaternion.setFromEuler(_euler);
     }
-    let position = this.raycast();
-    placeCube(position)
+    let intersect = this.raycast();
+    if (intersect) {
+
+
+      myLog(intersect.object.geometry.attributes,"attributes")
+      // console.log("points",intersect.object.geometry.attributes.position.array);
+      placeCube(intersect.point);
+      removeCube(intersect.object);
+      updateGeo(intersect.object) 
+    }
   }
   get #moveForward() {
     return Input.GetKeyDown("w");
@@ -79,31 +88,15 @@ export default class EditorControls {
       let intersects = Raycasting.cast();
       let intersect = intersects[0];
       if (intersect && intersect.face) {
-        const obj = intersect.object;
-        const faceIndex = intersect.faceIndex;
-        
-
         let normal = intersect.face.normal.clone();
-        // const faceCenter = new THREE.Vector3();
-        // intersect.face.getCenter(faceCenter);
-        // const position = new THREE.Vector3().addVectors(
-        //   faceCenter,
-        //   faceNormal.clone().multiplyScalar(1)
-        // );
-        // rollOverMesh.position.copy(position);
-
         normal.transformDirection(intersect.object.matrixWorld);
-        
-        // rollOverMesh.position.copy(intersect.point);
-        // rollOverMesh.position.floor().addScalar(0.5);
-        normal.multiplyScalar(.5);
-
+        normal.multiplyScalar(0.5);
         let p1 = intersect.point.clone();
         p1.add(normal);
         line.geometry.setFromPoints([intersect.point, p1]);
         rollOverMesh.position.copy(p1);
         rollOverMesh.position.floor().addScalar(0.5);
-        return p1
+        return intersect;
       }
     } catch (err) {
       console.error(err);

@@ -36,7 +36,9 @@ export default {
     webgl.mount(this.$el.parentElement);
     await webgl.load();
     webgl.play();
-   
+  },
+  unmounted() {
+    console.log("this is asdasd sadasdtest!!");
   },
   methods: {
     toggle() {
