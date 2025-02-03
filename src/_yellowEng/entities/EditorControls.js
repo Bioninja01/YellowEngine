@@ -1,33 +1,29 @@
 import * as THREE from "three";
 import Input from "../systems/Input";
-import { drawLine } from "../creation/add";
-import Raycasting from "../systems/Raycast";
-import { placeCube, removeCube,updateGeo } from "./Controls";
-import { myLog } from "../systems/Logger";
-
-const line = drawLine(
-  new THREE.Vector3(0, 0, 0),
-  new THREE.Vector3(0, 2, 0),
-  0x00ffff
-);
-const rollOverGeo = new THREE.BoxGeometry(1, 1, 1);
-const rollOverMaterial = new THREE.MeshBasicMaterial({
-  color: 0xff0000,
-  opacity: 0.5,
-  transparent: true,
-});
-const rollOverMesh = new THREE.Mesh(rollOverGeo, rollOverMaterial);
+import { TransformControls } from "three/addons/controls/TransformControls.js";
+import { ObjectState } from "./EditorStates";
 
 /** Class representing a EditorControls. */
 export default class EditorControls {
   #camera = null;
+  control = null;
   #velocity = new THREE.Vector3();
   #direction = new THREE.Vector3();
   #isLocked = false;
+  currentState = new ObjectState();
   load(webgl) {
     this.#camera = webgl.getCamera();
-    webgl.addGizmo(line);
-    webgl.addGizmo(rollOverMesh);
+    this.control = new TransformControls(
+      this.#camera,
+      webgl.renderer.domElement
+    );
+    this.control.setMode("translate");
+    this.control.addEventListener("change", () => {
+      this.#isLocked = false;
+    });
+    this.control.addEventListener("dragging-changed", () => {
+      this.#isLocked = false;
+    });
   }
   update(detaTime) {
     const delta = detaTime / 1000; // convert to secs.
@@ -42,6 +38,7 @@ export default class EditorControls {
       this.#velocity.x -= this.#direction.x * 100.0 * delta;
     this.#camera.translateX(-this.#velocity.x * delta);
     this.#camera.translateZ(this.#velocity.z * delta);
+
     if (Input.GetMouseDown() && !this.#isLocked) {
       this.#isLocked = true;
       document.body.requestPointerLock();
@@ -60,16 +57,10 @@ export default class EditorControls {
       _euler.x = Math.max(_PI_2 - Math.PI, Math.min(_PI_2 - 0, _euler.x));
       this.#camera.quaternion.setFromEuler(_euler);
     }
-    let intersect = this.raycast();
-    if (intersect) {
-
-
-      myLog(intersect.object.geometry.attributes,"attributes")
-      // console.log("points",intersect.object.geometry.attributes.position.array);
-      placeCube(intersect.point);
-      removeCube(intersect.object);
-      updateGeo(intersect.object) 
+    if (Input.GetKeyUp("t")) {
+      this.currentState.toogleState();
     }
+    this.currentState.update(delta);
   }
   get #moveForward() {
     return Input.GetKeyDown("w");
@@ -82,24 +73,5 @@ export default class EditorControls {
   }
   get #moveRight() {
     return Input.GetKeyDown("d");
-  }
-  raycast() {
-    try {
-      let intersects = Raycasting.cast();
-      let intersect = intersects[0];
-      if (intersect && intersect.face) {
-        let normal = intersect.face.normal.clone();
-        normal.transformDirection(intersect.object.matrixWorld);
-        normal.multiplyScalar(0.5);
-        let p1 = intersect.point.clone();
-        p1.add(normal);
-        line.geometry.setFromPoints([intersect.point, p1]);
-        rollOverMesh.position.copy(p1);
-        rollOverMesh.position.floor().addScalar(0.5);
-        return intersect;
-      }
-    } catch (err) {
-      console.error(err);
-    }
   }
 }

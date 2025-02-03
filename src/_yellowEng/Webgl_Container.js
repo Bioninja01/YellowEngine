@@ -97,7 +97,7 @@ export default class Webgl_Container {
     }
   }
   reset() {
-    const camera = this.getCamera();
+    let camera = this.getCamera();
     this.removeEventListeners();
     camera = Helper.initializeCamera();
     this.scene.remove(this.camera_dolly);
@@ -105,7 +105,7 @@ export default class Webgl_Container {
     this.mount(this.canvasElement);
   }
   resize() {
-    const camera = this.getCamera();
+    let camera = this.getCamera();
     camera.aspect =
       this.canvasElement.offsetWidth / this.canvasElement.offsetHeight;
     camera.updateProjectionMatrix();

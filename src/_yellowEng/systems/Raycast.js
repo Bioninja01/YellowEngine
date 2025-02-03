@@ -8,7 +8,7 @@ export default class Raycasting {
   static setWebgl(webgl) {
     Raycasting.#webgl = webgl;
   }
-  static cast() {
+  static cast(group = Raycasting.#webgl.main.children) {
     if (!Raycasting.#webgl) {
       throw new Error(
         "No Webgl_Container set, please create a instance Webgl_Container"
@@ -19,9 +19,10 @@ export default class Raycasting {
       Raycasting.#webgl.getCamera()
     );
     // calculate objects intersecting the picking ray
-    const intersects = Raycasting.#raycaster.intersectObjects(
-      Raycasting.#webgl.main.children
-    );
+    const intersects = Raycasting.#raycaster.intersectObjects(group);
     return intersects;
   }
+
+
+  
 }

@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { InfiniteGridHelper } from "../helpers/InfiniteGridHelper";
 import { Sky } from "three/addons/objects/Sky.js";
 import { addCube, drawLine } from "../creation/add";
-import EditorControls from "../constituents/EditorControls";
+import EditorControls from "../entities/EditorControls";
 
 const Snap2GridValue = 50;
 const webgl = YellowEngine.webgl;

@@ -9,8 +9,10 @@ export function placeCube(postion) {
     let box = makeBox();
     box.name = "makeBox";
     YellowEngine.webgl.addObject3D(box);
+
     box.position.copy(postion);
     box.position.floor().addScalar(0.5);
+    getVertices(box);
 
     const vertices = [];
     const postionAttributes = box.geometry.attributes.position;
@@ -35,7 +37,9 @@ export function placeCube(postion) {
 
     points.position.copy(postion);
     points.position.floor().addScalar(0.5);
-    YellowEngine.webgl.addGizmo(points);
+    YellowEngine.webgl.addObject3D(points);
+
+    window.points = points;
   }
 }
 export function removeCube(obj) {
@@ -44,7 +48,6 @@ export function removeCube(obj) {
     YellowEngine.webgl.removeObject3D(obj);
   }
 }
-
 export function updateGeo(obj) {
   if (Input.GetKeyUp("m")) {
     // Access the x, y, and z coordinates of the first vertex
@@ -62,6 +65,23 @@ export function updateGeo(obj) {
 
     obj.geometry.attributes.position.needsUpdate = true;
   }
+}
+export function getVertices(obj) {
+  const lookupTable = {};
+  const vertices = [];
+  const positionAttribute = obj.geometry.attributes.position;
+  for (let i = 0; i < positionAttribute.count; i++) {
+    const vertex = new THREE.Vector3();
+    vertex.fromBufferAttribute(positionAttribute, i); // read vertex
+    if (lookupTable[JSON.stringify(vertex)]) {
+      lookupTable[JSON.stringify(vertex)] += `,${i}`;
+    } else {
+      lookupTable[JSON.stringify(vertex)] = `${i}`;
+    }
+    vertices.push(vertex);
+  }
+
+  return vertices;
 }
 
 function makeBox() {

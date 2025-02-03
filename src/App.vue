@@ -26,6 +26,7 @@
 </style>
 <script>
 import webgl from "./_yellowEng/scripts/setup";
+
 export default {
   data() {
     return {
@@ -33,12 +34,13 @@ export default {
     };
   },
   async mounted() {
+    webgl.stop();
     webgl.mount(this.$el.parentElement);
     await webgl.load();
     webgl.play();
   },
   unmounted() {
-    console.log("this is asdasd sadasdtest!!");
+    webgl.unmounted();
   },
   methods: {
     toggle() {
