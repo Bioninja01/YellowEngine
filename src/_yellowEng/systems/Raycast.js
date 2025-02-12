@@ -1,9 +1,15 @@
 import * as THREE from "three";
 
+function setupRaycat() {
+  const raycaster = new THREE.Raycaster();
+  raycaster.params.Points.threshold = 0.05;
+  return raycaster;
+}
+
 export default class Raycasting {
   // For Later when I do mouse movment
   static #pointer = new THREE.Vector2();
-  static #raycaster = new THREE.Raycaster();
+  static #raycaster = setupRaycat();
   static #webgl = null;
   static setWebgl(webgl) {
     Raycasting.#webgl = webgl;
@@ -22,7 +28,4 @@ export default class Raycasting {
     const intersects = Raycasting.#raycaster.intersectObjects(group);
     return intersects;
   }
-
-
-  
 }

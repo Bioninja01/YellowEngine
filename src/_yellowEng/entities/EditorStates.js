@@ -81,6 +81,35 @@ export class ObjectState extends StateObj {
   update(detaTime) {
     let intersects = Raycasting.cast();
     let intersect = intersects[0];
+    if (intersect) {
+      let index = intersect.index;
+      if (index && !window.vertexPoint) {
+        window.vertexPoint = index;
+        console.log("hit");
+        window.vertexPointMove = function (pos = { x: 0, y: 0, z: 0 }) {
+          if (!pos.x && !pos.y && !pos.z) {
+            return;
+          }
+          const vertex = new THREE.Vector3();
+          const positionAttribute =
+            intersect.object.geometry.attributes.position;
+          vertex.fromBufferAttribute(positionAttribute, window.vertexPoint); // read vertex
+          // vertex.addScalar(5)
+          positionAttribute.setXYZ(
+            window.vertexPoint,
+            vertex.x + pos.x,
+            vertex.y + pos.y,
+            vertex.z + pos.z
+          ); // write coordinates back
+          positionAttribute.needsUpdate = true;
+        };
+        // debugger
+      }
+
+      // .attributes.size.array[intersect.index]
+      // let object = intersect.object.geometry.attributes.position;
+      // console.log("object", object);
+    }
     if (intersect && intersect.face) {
       let normal = intersect.face.normal.clone();
       normal.transformDirection(intersect.object.matrixWorld);

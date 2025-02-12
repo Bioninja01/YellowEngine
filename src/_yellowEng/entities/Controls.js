@@ -8,16 +8,14 @@ export function placeCube(postion) {
   if (Input.GetKeyUp(" ")) {
     let box = makeBox();
     box.name = "makeBox";
-    YellowEngine.webgl.addObject3D(box);
-
     box.position.copy(postion);
     box.position.floor().addScalar(0.5);
-    getVertices(box);
+    YellowEngine.webgl.addObject3D(box);
 
     const vertices = [];
     const postionAttributes = box.geometry.attributes.position;
 
-    for (let i = 0; i < postionAttributes.count; i++) {
+    for (let i = 0; i < postionAttributes.count/postionAttributes.itemSize; i++) {
       const vertex = new THREE.Vector3();
       vertex.fromBufferAttribute(postionAttributes, i);
       vertices.push(vertex);
@@ -33,8 +31,9 @@ export function placeCube(postion) {
       alphaTest: 0.5,
     });
     const pointsGeometry = new THREE.BufferGeometry().setFromPoints(vertices);
-    const points = new THREE.Points(pointsGeometry, pointsMaterial);
+    pointsGeometry.attributes.size = new THREE.Float32BufferAttribute([], 1);
 
+    const points = new THREE.Points(pointsGeometry, pointsMaterial);
     points.position.copy(postion);
     points.position.floor().addScalar(0.5);
     YellowEngine.webgl.addObject3D(points);
