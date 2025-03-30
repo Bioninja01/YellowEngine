@@ -1,5 +1,4 @@
 <template>
-  <!-- <pre class="VrButton">{{ camera.position }}</pre> -->
   <button class="VrButton" @click="toggle">vr Button</button>
   <div class="cursor"></div>
 </template>
@@ -25,27 +24,34 @@
 }
 </style>
 <script>
-import webgl from "./_yellowEng/scripts/setup";
+import setup from "./_yellowEng/scripts/setup";
+let webgl = null;
 
 export default {
   data() {
     return {
       vrMode: false,
+      
     };
   },
   async mounted() {
+    webgl = await setup()
     webgl.stop();
     webgl.mount(this.$el.parentElement);
-    await webgl.load();
+    // await webgl.load();
     webgl.play();
   },
   unmounted() {
-    webgl.unmounted();
+    if(webgl){
+      webgl.unmounted();
+    }
   },
   methods: {
     toggle() {
-      this.vrMode ? webgl.stopVR() : webgl.startVR();
-      this.vrMode = !this.vrMode;
+      if(webgl){
+        this.vrMode ? webgl.stopVR() : webgl.startVR();
+        this.vrMode = !this.vrMode;
+      }
     },
   },
 };

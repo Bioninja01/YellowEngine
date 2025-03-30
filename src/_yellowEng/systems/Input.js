@@ -5,6 +5,10 @@ export default class Input {
     mouseDown: "mousedown",
     mouseUp: "mouseup",
   };
+  static MousePostion = {
+    x: 0,
+    y: 0,
+  };
   static #lookupTable = {};
 
   static GetKeyUp(key) {
@@ -17,16 +21,17 @@ export default class Input {
     if (data == Input.Events.keyDown) return true;
     return false;
   }
-  static GetMouseUp() {
-    let data = Input.#lookupTable["mouse"];
+  static GetMouseUp(key = "mouseLeft") {
+    let data = Input.#lookupTable[key];
     if (data == Input.Events.mouseUp) return true;
     return false;
   }
-  static GetMouseDown() {
-    let data = Input.#lookupTable["mouse"];
+  static GetMouseDown(key = "mouseLeft") {
+    let data = Input.#lookupTable[key];
     if (data == Input.Events.mouseDown) return true;
     return false;
   }
+
   static GetMousemove() {
     let event = Input.#lookupTable["mousemove"];
     if (!event) return null;
@@ -39,14 +44,29 @@ export default class Input {
   static handleKeyUp(event) {
     Input.#lookupTable[event.key] = Input.Events.keyUp;
   }
-  static handleMouseDown() {
-    Input.#lookupTable["mouse"] = Input.Events.mouseDown;
+  static handleMouseDown(event) {
+    // right-click
+    if (event.button === 2) {
+      Input.#lookupTable["mouseRight"] = Input.Events.mouseDown;
+      return;
+    }
+    // left-click
+    Input.#lookupTable["mouseLeft"] = Input.Events.mouseDown;
   }
-  static handleMouseUp() {
-    Input.#lookupTable["mouse"] = Input.Events.mouseUp;
+  static handleMouseUp(event) {
+    // right-click
+    if (event.button === 2) {
+      Input.#lookupTable["mouseRight"] = Input.Events.mouseUp;
+      return;
+    }
+    // left-click
+    Input.#lookupTable["mouseLeft"] = Input.Events.mouseUp;
   }
   static handleMouseMove(event) {
     Input.#lookupTable["mousemove"] = event;
+    Input.MousePostion.x = (event.clientX / window.innerWidth) * 2 - 1;
+    Input.MousePostion.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    
   }
   static setUpEventListeners() {
     window.addEventListener("keydown", Input.handleKeyDown);

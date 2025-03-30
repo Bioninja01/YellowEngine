@@ -10,9 +10,9 @@ export default class Webgl_Container {
     MAIN: "main",
   };
   #camera;
-  dummyCam = new THREE.Object3D();
   #updates = []; // this is where all the update functions get called at in the update loop.
   #entities = [];
+  dummyCam = new THREE.Object3D();
   gizmos = new THREE.Group();
   light = new THREE.Group();
   main = new THREE.Group();
@@ -49,8 +49,9 @@ export default class Webgl_Container {
       }
     }
   }
-  add2Entity(entity) {
+  async add2Entity(entity) {
     this.#entities.push(entity);
+    await entity.load(this);
     this.add2Update(function (detaTime) {
       entity.update(detaTime);
     });
@@ -136,11 +137,17 @@ export default class Webgl_Container {
   }
   play() {
     const self = this;
+    const clock = new THREE.Clock();
+
     let prevTime = performance.now();
     self.renderer.setAnimationLoop(function () {
+      const mixerUpdateDelta = clock.getDelta();
       const time = performance.now();
       const detaTime = time - prevTime;
-      self.update(detaTime);
+      // console.log("mixerUpdateDelta",mixerUpdateDelta)
+      // console.log("detaTime",detaTime)
+
+      self.update(mixerUpdateDelta);
       self.render();
       prevTime = time;
     });

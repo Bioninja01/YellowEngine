@@ -82,7 +82,6 @@ export function getVertices(obj) {
 
   return vertices;
 }
-
 function makeBox() {
   const boxGeo = new THREE.BoxGeometry(1, 1, 1);
   const boxMaterial = new THREE.MeshStandardMaterial({

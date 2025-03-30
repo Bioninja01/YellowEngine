@@ -13,7 +13,6 @@ export function addCube(x, y, z, color = new THREE.Color("#049ef4"), size=1) {
   mesh.position.set(x, y, z);
   return mesh;
 }
-
 export function drawLine(point1, point2, color = 0x0000ff) {
   const material = new THREE.LineBasicMaterial({
     color,

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import Input from "./Input";
 
 function setupRaycat() {
   const raycaster = new THREE.Raycaster();
@@ -8,7 +9,7 @@ function setupRaycat() {
 
 export default class Raycasting {
   // For Later when I do mouse movment
-  static #pointer = new THREE.Vector2();
+  // static #pointer = Input.MousePostion;
   static #raycaster = setupRaycat();
   static #webgl = null;
   static setWebgl(webgl) {
@@ -20,8 +21,9 @@ export default class Raycasting {
         "No Webgl_Container set, please create a instance Webgl_Container"
       );
     }
+    console.log("Input.MousePostion", Input.MousePostion)
     Raycasting.#raycaster.setFromCamera(
-      Raycasting.#pointer,
+      Input.MousePostion,
       Raycasting.#webgl.getCamera()
     );
     // calculate objects intersecting the picking ray
