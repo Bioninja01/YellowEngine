@@ -1,18 +1,4 @@
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-
-const loader = new GLTFLoader();
-function modelLoader(url) {
-  return new Promise((resolve, reject) => {
-    loader.load(
-      url,
-      (gltfData) => {
-        resolve(gltfData);
-      },
-      null,
-      reject
-    );
-  });
-}
+import { addGltf } from "../../controller/ControllerGlbLoader";
 
 export default class Entity {
   model = null;
@@ -22,12 +8,11 @@ export default class Entity {
   }
   async load(webgl) {
     if (this.url) {
-      const gltf = await modelLoader(this.url);
-      this.model = gltf.scene;
-      webgl.addObject3D(this.model);
+      const gltf = await addGltf(this.url, webgl);
+      this.model = gltf.scene
       return gltf;
     }
   }
-  async start() {}
-  async update(detaTime) {}
+  async start() { }
+  async update(detaTime) { }
 }

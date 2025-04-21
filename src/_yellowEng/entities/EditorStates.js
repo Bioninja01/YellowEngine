@@ -54,7 +54,6 @@ export class ObjectState extends StateBase {
     if(Input.GetMouseDown()){
       let intersects = Raycasting.cast();
       let intersect = intersects[0];
-      console.log("intersect", intersect)
       if (intersect) {
         if (intersect.index) {
           console.log("intersect.index", intersect.index);

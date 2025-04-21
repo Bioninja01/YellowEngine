@@ -6,8 +6,11 @@ import { addCube, drawLine } from "../creation/add";
 import EditorControls from "../entities/EditorControls";
 import Entity_Character from "../systems/Entity/Entity_Character";
 import Game_CharacterController from "../systems/Game_CharacterController";
+import world1URL from "../../assets/models/world1.glb?url"
+import { addGltf } from "../controller/ControllerGlbLoader";
+import * as CANNON from 'cannon-es'
 
-export default async function setup() {
+export default async function setUpGame() {
   const Snap2GridValue = 50;
   const webgl = YellowEngine.webgl;
   const grid = new InfiniteGridHelper(1, 1);
@@ -48,15 +51,27 @@ export default async function setup() {
   uniforms["mieDirectionalG"].value = effectController.mieDirectionalG;
   uniforms["sunPosition"].value.set(400000, 400000, 400000);
 
-  let editorControls = new EditorControls();
-  webgl.add2Entity(editorControls);
+  // let editorControls = new EditorControls();
+  // webgl.add2Entity(editorControls);
   const playerTemp = new Entity_Character();
-
   await webgl.add2Entity(playerTemp);
-  let controller = new Game_CharacterController(playerTemp, webgl.getCamera());
+  let controller = new Game_CharacterController(playerTemp, webgl.getCamera(), webgl.renderer.domElement);
   webgl.add2Update(function (delta) {
     controller.update(delta);
   });
-  playerTemp.model.position.set(1, 0, 0);
+  webgl.physics.addBody(controller.rigidbody)
+  let world1Obj = await addGltf(world1URL, webgl)
+  world1Obj.scene.position.set(0, 0.2, 0);
+  controller.setPostion(new THREE.Vector3(1, 0, 0))
+
+  const planeBody = new CANNON.Body({ mass: 0 })
+  planeBody.addShape(new CANNON.Plane())
+  planeBody.position.set(0,-0.2,0)
+  planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
+  webgl.physics.addBody(planeBody)
+
+
+
+
   return webgl;
 }

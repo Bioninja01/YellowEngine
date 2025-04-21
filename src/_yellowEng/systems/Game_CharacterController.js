@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import StateBase from "./States/StateBase";
 import Input from "./Input";
-
+import { OrbitControls } from "three/examples/jsm/Addons.js";
+import { makeCapsuleCollider } from "../helpers/HelperCollider";
 export class CharacterState extends StateBase {
   static STATE = {
     INIT: "INIT",
@@ -22,16 +23,23 @@ export default class Game_CharacterController {
   toggleRun = true;
   stateController = new CharacterState();
   currentAction = null;
-
-  constructor(entity_charactor, camera) {
+  #orbitControls;
+  constructor(entity_charactor, camera, domElement) {
     // Constructor function
     this.model = entity_charactor.model;
+    this.rigidbody = makeCapsuleCollider(.25, 1)
     this.mixer = entity_charactor.mixer;
     this.animationmap = entity_charactor.animationmap;
     this.camera = camera;
+    this.#orbitControls = new OrbitControls(camera, domElement);
   }
-
+  start() {
+    this.updateCameraTarget(0, 0)
+    this.#orbitControls.update()
+  }
   update(delta) {
+   
+
     // TO DETERMINE WHETHER NEXT STATE MUST BE IDLE,WALK,
     const keysPressed = directionPressed();
     const isMoving = keysPressed.length > 0;
@@ -62,8 +70,8 @@ export default class Game_CharacterController {
       // I know if the character is in run or walk state I must change the Direction
       // Calculate towards camera direction angle ( to make character face camera view )
       var anglebtwcamerachar = Math.atan2(
-        this.camera.position.x - this.model.position.x,
-        this.camera.position.z - this.model.position.z
+        this.camera.position.x - this.rigidbody.position.x,
+        this.camera.position.z - this.rigidbody.position.z
       );
 
       // Direction offset
@@ -72,7 +80,6 @@ export default class Game_CharacterController {
       // Rotate Model
       this.rotateQuaternion.setFromAxisAngle(
         this.rotateAngle,
-        // directionOffsetValue
         anglebtwcamerachar + directionOffsetValue
       );
       this.model.quaternion.rotateTowards(this.rotateQuaternion, 0.2); // Rotating in step-wise to create a smooth rotate effect
@@ -88,52 +95,75 @@ export default class Game_CharacterController {
         this.currentAction == "Run" ? this.runVelocity : this.walkVelocity;
 
       // move model
-      const moveX = this.walkDirection.x * -velocity * delta ;
-      const moveZ = this.walkDirection.z * -velocity * delta ;
+      const moveX = this.walkDirection.x * -velocity * delta;
+      const moveZ = this.walkDirection.z * -velocity * delta;
 
-      this.model.position.x += moveX;
-      this.model.position.z += moveZ;
+      this.rigidbody.position.x += moveX;
+      this.rigidbody.position.z += moveZ;
       // Passing these values to updateCameraTarget
-      // this.updateCameraTarget(moveX, moveZ);
+      this.updateCameraTarget(moveX, moveZ);
+      this.#orbitControls.update();
     }
+    
+    this.model.position.copy(this.rigidbody.position)
+    // this.model.quaternion.copy(this.rigidbody.quaternion)
   }
-  // updateCameraTarget(moveX, moveZ) {
-  //   // move camera
-  //   this.camera.position.x = moveX;
-  //   this.camera.position.z = moveZ;
-  //   // update camera target
-  //   this.cameraTarget.x = this.model.position.x;
-  //   this.cameraTarget.y = this.model.position.y + 1;
-  //   this.cameraTarget.z = this.model.position.z;
-  //   this.orbitControl.target = this.cameraTarget;
-  // }
+  updateCameraTarget(moveX, moveZ) {
+    // move camera
+    this.camera.position.x += moveX;
+    this.camera.position.z += moveZ;
+    // update camera target
+    this.cameraTarget.x = this.model.position.x;
+    this.cameraTarget.y = this.model.position.y + 1;
+    this.cameraTarget.z = this.model.position.z;
+    this.#orbitControls.target = this.cameraTarget;
+  }
   // Method to toggle between run and walk
   switchRunToggle() {
     this.toggleRun = !this.toggleRun;
   }
+
+  setPostion(vec3) {
+    this.model.position.copy(vec3)
+    this.rigidbody.position.copy(vec3)
+  }
 }
 
+// Todo: messy and needs a refactore.
 function directionoffset(keysPressed) {
   // Calculating Direction Offset logic for W,W+A,W+S,S+D,A+D
   var value = 0;
-  if (keysPressed.includes("ArrowUp")) {
+  if (keysPressed.includes("w")) {
+    if (keysPressed.includes("a")) {
+      return -3 * Math.PI / 4; // W+A 45%  
+    }
+    if (keysPressed.includes("d")) {
+      return 3 * Math.PI / 4; // W+A 45%  
+    }
     return Math.PI;
   }
-  if (keysPressed.includes("ArrowLeft")) {
-    return -Math.PI / 2; // W+A 45%
-  }
-  if (keysPressed.includes("ArrowRight")) {
-    return Math.PI / 2; // W+D -45%
-  }
-  if (keysPressed.includes("ArrowDown")) {
+  if (keysPressed.includes("s")) {
+    if (keysPressed.includes("a")) {
+      return -Math.PI / 4; // W+A 45%  
+    }
+    if (keysPressed.includes("d")) {
+      return Math.PI / 4; // W+A 45%  
+    }
     return 0; // S
   }
+  if (keysPressed.includes("a")) {
+    return -Math.PI / 2; // W+A 45%
+  }
+  if (keysPressed.includes("d")) {
+    return Math.PI / 2; // W+D -45%
+  }
+
   return value;
 }
 
 // Refacort To handle Events insead of Keys
 function directionPressed() {
-  let keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+  let keys = ["w", "s", "a", "d"];
   return keys.filter(function (key) {
     return Input.GetKeyDown(key);
   });

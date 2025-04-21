@@ -24,7 +24,7 @@
 }
 </style>
 <script>
-import setup from "./_yellowEng/scripts/setup";
+import setUpGame from "./_yellowEng/scripts/setUpGame.js";
 let webgl = null;
 
 export default {
@@ -35,7 +35,7 @@ export default {
     };
   },
   async mounted() {
-    webgl = await setup()
+    webgl = await setUpGame()
     webgl.stop();
     webgl.mount(this.$el.parentElement);
     // await webgl.load();

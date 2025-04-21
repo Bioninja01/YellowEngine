@@ -2,7 +2,11 @@ import * as THREE from "three";
 import * as Helper from "./helpers/WebglHelper.js";
 import Input from "./systems/Input.js";
 import Raycasting from "./systems/Raycast.js";
+import CannonDebugger from 'cannon-es-debugger'
 
+
+
+let cannonDebugger;
 export default class Webgl_Container {
   static Group_Target = {
     GIZMOS: "gizmos",
@@ -22,9 +26,12 @@ export default class Webgl_Container {
     this.#camera = Helper.initializeCamera();
     this.renderer = Helper.initializeRenderer();
     this.scene = Helper.setupDefaultScene(this.gizmos, this.main, this.light);
+    this.physics = Helper.setupDefaultWorld();
     this.camera_dolly = Helper.setupDolly(this.#camera, this.scene);
     this.#camera.add(this.dummyCam);
     Raycasting.setWebgl(this);
+
+    cannonDebugger = new CannonDebugger(this.scene, this.physics)
   }
   getCamera() {
     let camera = this.#camera;
@@ -121,6 +128,10 @@ export default class Webgl_Container {
     }
   }
   update(detaTime) {
+    this.physics.step(1 / 60, detaTime, 3)
+    if (cannonDebugger) {
+      cannonDebugger.update() // Update the CannonDebugger meshes
+    }
     for (let update of this.#updates) {
       update(detaTime);
     }
@@ -135,10 +146,10 @@ export default class Webgl_Container {
     }
     this.renderer.render(this.scene, this.#camera);
   }
+
   play() {
     const self = this;
     const clock = new THREE.Clock();
-
     let prevTime = performance.now();
     self.renderer.setAnimationLoop(function () {
       const mixerUpdateDelta = clock.getDelta();

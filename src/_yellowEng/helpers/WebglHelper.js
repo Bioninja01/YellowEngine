@@ -2,7 +2,13 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { PointerLockControls } from "three/examples/jsm/Addons.js";
 import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
+import * as CANNON from 'cannon-es'
 
+export function setupDefaultWorld() {
+  const physics = new CANNON.World();
+  physics.gravity.set(0, -9.82, 0)
+  return physics
+}
 export function initializeRenderer() {
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
@@ -68,7 +74,7 @@ export function setupDefaultScene(gizmos, main, light) {
   mesh.receiveShadow = true;
   mesh.name = "floor";
   mesh.updateMatrix();
-  main.add(mesh);
+  // main.add(mesh);
   scene.add(gizmos, light, main);
   return scene;
 }

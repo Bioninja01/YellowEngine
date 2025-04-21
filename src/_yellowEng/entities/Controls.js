@@ -5,7 +5,7 @@ import YellowEngine from "../YellowEngine";
 
 export function placeCube(postion) {
   if (!postion) return;
-  if (Input.GetKeyUp(" ")) {
+  if (Input.GetKeyUp("Enter")) {
     let box = makeBox();
     box.name = "makeBox";
     box.position.copy(postion);

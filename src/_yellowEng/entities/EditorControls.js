@@ -15,6 +15,12 @@ function moveLeft() {
 function moveRight() {
   return Input.GetKeyDown("d");
 }
+function moveUp() {
+  return Input.GetKeyDown("q");
+}
+function moveDown() {
+  return Input.GetKeyDown("e");
+}
 
 /** Class representing a EditorControls. */
 export default class EditorControls {
@@ -42,16 +48,20 @@ export default class EditorControls {
     const delta = detaTime; // convert to secs.
     this.#velocity.x -= this.#velocity.x * 10.0 * delta;
     this.#velocity.z -= this.#velocity.z * 10.0 * delta;
+    this.#velocity.y -= this.#velocity.y * 10.0 * delta;
     this.#direction.z = Number(moveForward()) - Number(moveBackward());
     this.#direction.x = Number(moveRight()) - Number(moveLeft());
+    this.#direction.y = Number(moveUp()) - Number(moveDown());
     this.#direction.normalize(); // this ensures consistent movements in all directions
     if (moveForward() || moveBackward())
       this.#velocity.z -= this.#direction.z * 100.0 * delta;
     if (moveLeft() || moveRight)
       this.#velocity.x -= this.#direction.x * 100.0 * delta;
+    if (moveUp() || moveDown())
+      this.#velocity.y -= this.#direction.y * 25.0 * delta;
     this.#camera.translateX(-this.#velocity.x * delta);
+    this.#camera.translateY(-this.#velocity.y * delta);
     this.#camera.translateZ(this.#velocity.z * delta);
-
     if (Input.GetMouseDown('mouseRight') && !this.#isLocked) {
       this.#isLocked = true;
       document.body.requestPointerLock();
