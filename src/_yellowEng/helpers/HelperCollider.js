@@ -2,7 +2,7 @@ import * as CANNON from 'cannon-es'
 
 export function makeCapsuleCollider(radius, height) {
     const capsuleBody = new CANNON.Body({
-        mass: 1,
+        mass: 100,
     });
     const sphereTop = new CANNON.Sphere(radius);
     const sphereBottom = new CANNON.Sphere(radius);

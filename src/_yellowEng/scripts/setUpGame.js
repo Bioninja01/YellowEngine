@@ -65,7 +65,9 @@ export default async function setUpGame() {
   controller.setPostion(new THREE.Vector3(1, 0, 0))
 
   const planeBody = new CANNON.Body({ mass: 0 })
-  planeBody.addShape(new CANNON.Plane())
+  planeBody.addShape(new CANNON.Box(new CANNON.Vec3(10, 10, 0.1))
+
+)
   planeBody.position.set(0,-0.2,0)
   planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
   webgl.physics.addBody(planeBody)
