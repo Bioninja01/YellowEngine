@@ -2,12 +2,15 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { PointerLockControls } from "three/examples/jsm/Addons.js";
 import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
-import * as CANNON from 'cannon-es'
+import * as RAPIER from '@dimforge/rapier3d';
+
 
 export function setupDefaultWorld() {
-  const physics = new CANNON.World();
-  physics.gravity.set(0, -9.82, 0)
-  return physics
+  let physics = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
+  let physicsDebug = new RAPIER.DebugRenderBuffers();
+  physics.debugRender(physicsDebug);
+  let eventQueue = new RAPIER.EventQueue(true);
+  return { physics, physicsDebug,eventQueue }
 }
 export function initializeRenderer() {
   const renderer = new THREE.WebGLRenderer({

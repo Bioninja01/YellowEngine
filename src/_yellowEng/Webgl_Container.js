@@ -2,11 +2,12 @@ import * as THREE from "three";
 import * as Helper from "./helpers/WebglHelper.js";
 import Input from "./systems/Input.js";
 import Raycasting from "./systems/Raycast.js";
-import CannonDebugger from 'cannon-es-debugger'
 
+// Create a Three.js buffer geometry from Rapier debug info
+const debugGeometry = new THREE.BufferGeometry();
+const debugMaterial = new THREE.LineBasicMaterial({ color: 0xff00ff });
+const debugMesh = new THREE.LineSegments(debugGeometry, debugMaterial);
 
-
-let cannonDebugger;
 export default class Webgl_Container {
   static Group_Target = {
     GIZMOS: "gizmos",
@@ -15,7 +16,6 @@ export default class Webgl_Container {
   };
   #camera;
   #updates = []; // this is where all the update functions get called at in the update loop.
-  #entities = [];
   dummyCam = new THREE.Object3D();
   gizmos = new THREE.Group();
   light = new THREE.Group();
@@ -23,15 +23,17 @@ export default class Webgl_Container {
   isLocked = false;
   canvasElement;
   constructor() {
+    const { physics, physicsDebug, eventQueue } = Helper.setupDefaultWorld();
     this.#camera = Helper.initializeCamera();
     this.renderer = Helper.initializeRenderer();
     this.scene = Helper.setupDefaultScene(this.gizmos, this.main, this.light);
-    this.physics = Helper.setupDefaultWorld();
+    this.physics = physics;
+    this.physicsDebug = physicsDebug
+    this.eventQueue = eventQueue;
     this.camera_dolly = Helper.setupDolly(this.#camera, this.scene);
     this.#camera.add(this.dummyCam);
+    this.scene.add(debugMesh);
     Raycasting.setWebgl(this);
-
-    cannonDebugger = new CannonDebugger(this.scene, this.physics)
   }
   getCamera() {
     let camera = this.#camera;
@@ -55,13 +57,6 @@ export default class Webgl_Container {
         break;
       }
     }
-  }
-  async add2Entity(entity) {
-    this.#entities.push(entity);
-    await entity.load(this);
-    this.add2Update(function (detaTime) {
-      entity.update(detaTime);
-    });
   }
   add2Update(fun) {
     this.#updates.push(fun);
@@ -122,20 +117,15 @@ export default class Webgl_Container {
       this.canvasElement.offsetHeight
     );
   }
-  async load() {
-    for (let entity of this.#entities) {
-      await entity.load(this);
-    }
-  }
   update(detaTime) {
-    this.physics.step(1 / 60, detaTime, 3)
-    if (cannonDebugger) {
-      cannonDebugger.update() // Update the CannonDebugger meshes
-    }
+    let physics = this.physics;
+    // this.physics.step(1 / 60, detaTime, 3)
     for (let update of this.#updates) {
       update(detaTime);
     }
     Input.update(detaTime);
+    physics.step(this.eventQueue);
+    physics.debugRender(this.physicsDebug);
   }
   render() {
     if (!this.renderer || !this.#camera || !this.scene) {
@@ -144,6 +134,10 @@ export default class Webgl_Container {
       );
       return;
     }
+
+    debugGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(this.physicsDebug.vertices), 3));
+    debugGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(this.physicsDebug.colors), 4));
+
     this.renderer.render(this.scene, this.#camera);
   }
 
@@ -151,6 +145,18 @@ export default class Webgl_Container {
     const self = this;
     const clock = new THREE.Clock();
     let prevTime = performance.now();
+
+
+    // for (let collider of this.physics.colliders) {
+    //   if (collider.shapeType() === RAPIER.ShapeType.Cuboid) {
+    //     const halfExtents = collider.halfExtents();
+    //     const mesh = new THREE.Mesh(
+    //       new THREE.BoxGeometry(halfExtents.x * 2, halfExtents.y * 2, halfExtents.z * 2),
+    //       new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
+    //     );
+    //     this.scene.add(mesh);
+    //   }
+    // }
     self.renderer.setAnimationLoop(function () {
       const mixerUpdateDelta = clock.getDelta();
       const time = performance.now();

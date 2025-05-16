@@ -31,13 +31,11 @@ export default class Input {
     if (data == Input.Events.mouseDown) return true;
     return false;
   }
-
   static GetMousemove() {
     let event = Input.#lookupTable["mousemove"];
     if (!event) return null;
     return event;
   }
-
   static handleKeyDown(event) {
     Input.#lookupTable[event.key] = Input.Events.keyDown;
   }
@@ -66,7 +64,7 @@ export default class Input {
     Input.#lookupTable["mousemove"] = event;
     Input.MousePostion.x = (event.clientX / window.innerWidth) * 2 - 1;
     Input.MousePostion.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    
+
   }
   static setUpEventListeners() {
     window.addEventListener("keydown", Input.handleKeyDown);
@@ -82,6 +80,7 @@ export default class Input {
     window.removeEventListener("mouseup", Input.handleMouseUp);
     window.removeEventListener("mousemove", Input.handleMouseMove);
   }
+  //Update clears all pressed inputs 
   static update(detaTime) {
     let keys = Object.keys(Input.#lookupTable);
     for (let key of keys) {

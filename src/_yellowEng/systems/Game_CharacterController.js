@@ -3,6 +3,7 @@ import StateBase from "./States/StateBase";
 import Input from "./Input";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { makeCapsuleCollider } from "../helpers/HelperCollider";
+import { log } from "three/tsl";
 export class CharacterState extends StateBase {
   static STATE = {
     INIT: "INIT",
@@ -23,27 +24,35 @@ export default class Game_CharacterController {
   toggleRun = true;
   stateController = new CharacterState();
   currentAction = null;
-  #orbitControls;
-  constructor(entity_charactor, camera, domElement) {
+  #orbitControls = null;
+  constructor(webgl, entity_charactor) {
     // Constructor function
+    const self = this;
+    const { rigidBody, collider } = makeCapsuleCollider(webgl, .25, 1.30)
+    this.rigidbody = rigidBody
+    this.collider = collider
     this.model = entity_charactor.model;
-    this.rigidbody = makeCapsuleCollider(.25, 1)
     this.mixer = entity_charactor.mixer;
     this.animationmap = entity_charactor.animationmap;
-    this.camera = camera;
-    this.#orbitControls = new OrbitControls(camera, domElement);
+    this.camera = webgl.getCamera();
+    this.#orbitControls = new OrbitControls(this.camera, webgl.renderer.domElement);
+    this.physics = webgl.physics;
+    webgl.add2Update(function (delta) {
+      self.update(delta);
+    });
   }
   start() {
     this.updateCameraTarget(0, 0)
     this.#orbitControls.update()
   }
   update(delta) {
-   
-
+    const position = this.rigidbody.translation();
+    const quaternion = this.rigidbody.rotation();
+    this.model.position.copy(position)
+    this.model.quaternion.copy(quaternion)
     // TO DETERMINE WHETHER NEXT STATE MUST BE IDLE,WALK,
     const keysPressed = directionPressed();
     const isMoving = keysPressed.length > 0;
-
     // TODO: don't like this refactor, don't if,else if,else. messy
     if (isMoving && this.toggleRun) {
       this.stateController.state = CharacterState.STATE.RUN;
@@ -70,8 +79,8 @@ export default class Game_CharacterController {
       // I know if the character is in run or walk state I must change the Direction
       // Calculate towards camera direction angle ( to make character face camera view )
       var anglebtwcamerachar = Math.atan2(
-        this.camera.position.x - this.rigidbody.position.x,
-        this.camera.position.z - this.rigidbody.position.z
+        this.camera.position.x - position.x,
+        this.camera.position.z - position.z
       );
 
       // Direction offset
@@ -95,18 +104,46 @@ export default class Game_CharacterController {
         this.currentAction == "Run" ? this.runVelocity : this.walkVelocity;
 
       // move model
-      const moveX = this.walkDirection.x * -velocity * delta;
-      const moveZ = this.walkDirection.z * -velocity * delta;
+      const moveX = this.walkDirection.x * -velocity * delta * 2;
+      const moveZ = this.walkDirection.z * -velocity * delta * 2;
 
-      this.rigidbody.position.x += moveX;
-      this.rigidbody.position.z += moveZ;
+
+      const targetPos = {
+        x: moveX + position.x,
+        y: position.y - .2,
+        z: moveZ + position.z,
+      };
+      const maxDistance = 1
+      const hit = this.physics.castShape(
+        position,
+        quaternion,
+        targetPos,
+        this.collider.shape,
+        maxDistance,
+        true
+      );
+      console.log('hit', hit)
+
+      if (hit) {
+        // Hit something, move only part of the distance
+        // this.rigidbody.setNextKinematicTranslation(characterBody.translation().add(direction.scale(hit.toi)))
+        // this.rigidbody.setNextKinematicRotation(this.rotateQuaternion);
+      }
+      else {
+        this.rigidbody.setNextKinematicTranslation(targetPos)
+      }
+
+      // position.x += moveX;
+      // position.z += moveZ;
       // Passing these values to updateCameraTarget
       this.updateCameraTarget(moveX, moveZ);
       this.#orbitControls.update();
+      // this.rigidbody.setNextKinematicTranslation(targetPos)
+      this.rigidbody.setNextKinematicRotation(this.rotateQuaternion);
+
+      // this.rigidbody.setLinvel({ x: 0, y: 0, z: 1 }, true);
+      // rigidBody.setAngvel({ x: 3.0, y: 0.0, z: 0.0 }, true);
     }
-    
-    this.model.position.copy(this.rigidbody.position)
-    // this.model.quaternion.copy(this.rigidbody.quaternion)
   }
   updateCameraTarget(moveX, moveZ) {
     // move camera
@@ -122,10 +159,8 @@ export default class Game_CharacterController {
   switchRunToggle() {
     this.toggleRun = !this.toggleRun;
   }
-
-  setPostion(vec3) {
-    this.model.position.copy(vec3)
-    this.rigidbody.position.copy(vec3)
+  setPostion(position) {
+    this.rigidbody.setNextKinematicTranslation(position)
   }
 }
 
@@ -160,7 +195,6 @@ function directionoffset(keysPressed) {
 
   return value;
 }
-
 // Refacort To handle Events insead of Keys
 function directionPressed() {
   let keys = ["w", "s", "a", "d"];

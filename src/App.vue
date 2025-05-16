@@ -30,15 +30,13 @@ let webgl = null;
 export default {
   data() {
     return {
-      vrMode: false,
-      
+      vrMode: false,      
     };
   },
   async mounted() {
     webgl = await setUpGame()
     webgl.stop();
     webgl.mount(this.$el.parentElement);
-    // await webgl.load();
     webgl.play();
   },
   unmounted() {
