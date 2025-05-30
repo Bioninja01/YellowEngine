@@ -3,7 +3,10 @@ export default class StateBase {
     INIT: "INIT",
   };
   constructor() {
-    this.currentState = this.constructor.STATE.INIT;
+    const states = this.constructor.STATE;
+    const keys = Object.keys(states);
+    this.lastState = null
+    this.currentState = states[keys[0]];
   }
   static getStates() {
     let arr = Object.values(this.STATE);
@@ -13,10 +16,9 @@ export default class StateBase {
     return this.currentState;
   }
   set state(value = this.constructor.STATE.INIT) {
+    this.lastState = this.currentState
     this.currentState = value;
-    this.handelState(value);
   }
-  handelState(value) {}
   toogleState() {
     let states = this.constructor.getStates();
     let firstState = states[0];

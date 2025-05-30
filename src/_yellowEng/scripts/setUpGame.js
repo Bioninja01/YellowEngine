@@ -51,7 +51,7 @@ export default async function setUpGame() {
   let controller = new Game_CharacterController(webgl, playerTemp);
   // webgl.physics.addBody(controller.rigidbody)
 
-  makeBoxCollider(webgl,2)
+  //  makeBoxCollider(webgl,2)
 
   // let world1Obj = await addGltf(world1URL, webgl)
   // addGltfRigidbody(world1Obj.scene, webgl)
