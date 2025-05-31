@@ -9,7 +9,7 @@ import world1URL from "../../assets/models/world1.glb?url"
 import { addGltf, addGltfRigidbody } from "../controller/ControllerGlbLoader";
 import * as RAPIER from '@dimforge/rapier3d';
 // import EditorControls from "../entities/EditorControls";
-import { makeGround,makeBoxCollider } from "../helpers/HelperCollider";
+import { makeGround, makeBoxCollider } from "../helpers/HelperCollider";
 export default async function setUpGame() {
   // await RAPIER.init(); // This is the frist thing to call to use Physics
 
@@ -53,14 +53,14 @@ export default async function setUpGame() {
 
   //  makeBoxCollider(webgl,2)
 
-  // let world1Obj = await addGltf(world1URL, webgl)
-  // addGltfRigidbody(world1Obj.scene, webgl)
+  let world1Obj = await addGltf(world1URL, webgl)
+  addGltfRigidbody(world1Obj.scene, webgl)
   // controller.setPostion(new THREE.Vector3(1, 0, 0))
 
   // const planeBody = new CANNON.Body({ mass: 0 })
   // planeBody.addShape(new CANNON.Box(new CANNON.Vec3(10, 10, 0.1)))
   // planeBody.position.set(0, 0, 0)
-  // planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
+  // planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)b
 
   // Create a static floor body
 

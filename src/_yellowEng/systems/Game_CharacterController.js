@@ -1,11 +1,11 @@
 import * as THREE from "three";
 import StateBase from "./States/StateBase";
-import Input from "./Input";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { makeCapsuleCollider } from "../helpers/HelperCollider";
 // import { Vector3 } from "@dimforge/rapier3d";
 import * as RAPIER from '@dimforge/rapier3d';
-import { directionPressed,directionOffset,calWalkDirection,calRotation } from "../helpers/HelperMovement";
+import { makeHelperMesh } from "../helpers/HelperCollider";
+import { directionPressed, directionOffset, calWalkDirection, calRotation } from "../helpers/HelperMovement";
 
 export class CharacterState extends StateBase {
   static STATE = {
@@ -15,36 +15,25 @@ export class CharacterState extends StateBase {
   };
 }
 
-
-function makeHelperMesh(webgl, radius, height, color = 0xff0000) {
-  const capsuleGeometry = new THREE.CapsuleGeometry(radius, height);
-  const capsuleMaterial = new THREE.MeshBasicMaterial({ color, wireframe: true });
-  const capsuleMesh = new THREE.Mesh(capsuleGeometry, capsuleMaterial);
-  webgl.addObject3D(capsuleMesh);
-  return capsuleMesh;
-}
-
 const radius = .25
 const height = 1.30
 const fadeDuration = 0.2;
-const rotateAngle = new THREE.Vector3(0, 1, 0);
 const maxDistance = .01
-const maxToi = 0;
+const maxToi = .01;
 
 
 export default class Game_CharacterController {
   cameraTarget = new THREE.Vector3();
   runVelocity = 10;
-  walkVelocity = 3;
+  walkVelocity = 2;
   toggleRun = true;
   stateController = new CharacterState();
   currentAction = null;
   #orbitControls = null;
   constructor(webgl, entity_charactor) {
-    // Constructor function
     const self = this;
     const { rigidBody, collider } = makeCapsuleCollider(webgl, radius, height)
-    this.helperMesh = makeHelperMesh(webgl, radius, height)
+    // this.helperMesh = makeHelperMesh(webgl, radius, height)
     this.rigidbody = rigidBody
     this.collider = collider
     this.model = entity_charactor.model;
@@ -66,7 +55,7 @@ export default class Game_CharacterController {
     const position = this.rigidbody.translation();
     const quaternion = this.rigidbody.rotation();
     const walkDirection = calWalkDirection(this.camera);
-    const rotateQuaternion = calRotation(this.camera.position,position);
+    const rotateQuaternion = calRotation(this.camera.position, position);
     // Direction offset
     this.mixer.update(delta);
     updateModlePostion(this.model, position, quaternion)
@@ -77,9 +66,9 @@ export default class Game_CharacterController {
     // Run/Walk Velocity
     const velocity =
       this.stateController.state == CharacterState.STATE.RUN ? this.runVelocity : this.walkVelocity;
-    this.model.quaternion.rotateTowards(rotateQuaternion, 0.2); // Rotating in step-wise to create a smooth rotate effect
+    // this.model.quaternion.rotateTowards(rotateQuaternion, 0.2); // Rotating in step-wise to create a smooth rotate effect
 
-     // move model
+    // move model
     const moveX = walkDirection.x * -velocity * delta * 2 * Number(isMoving);
     const moveZ = walkDirection.z * -velocity * delta * 2 * Number(isMoving);
 
@@ -92,9 +81,11 @@ export default class Game_CharacterController {
     if (isMoving) {
       targetPos.x += moveX;
       targetPos.z += moveZ;
+      this.updateCameraTarget(moveX, moveZ);
+      this.rigidbody.setNextKinematicRotation(rotateQuaternion);
     }
 
-    const desiredMove = new THREE.Vector3(Math.round(walkDirection.x), -0.1, Math.round(walkDirection.z)); // e.g., from input
+    const desiredMove = new THREE.Vector3(Math.round(walkDirection.x), -0.09, Math.round(walkDirection.z)); // e.g., from input
 
     const hit = this.physics.castShape(
       targetPos,
@@ -114,22 +105,13 @@ export default class Game_CharacterController {
         position.y,
         hit.witness1.z
       )
-      let x = Math.abs(hitPosition.x - position.x);
-      let z = Math.abs(hitPosition.z - position.z);
-      if(Math.abs(x) > .003 &&  Math.abs(z) > .003){
-        this.rigidbody.setNextKinematicTranslation(hitPosition)
-      }
+      if (isMoving) this.rigidbody.setNextKinematicTranslation(hitPosition)
     }
     else {
       this.rigidbody.setNextKinematicTranslation(targetPos)
     }
-    // this.helperMesh.position.set(targetPos.x, targetPos.y, targetPos.z);
-
-
     // Passing these values to updateCameraTarget
-    this.updateCameraTarget(moveX, moveZ);
     this.#orbitControls.update();
-    this.rigidbody.setNextKinematicRotation(rotateQuaternion);
   }
   updateCameraTarget(moveX, moveZ) {
     // move camera
@@ -140,10 +122,6 @@ export default class Game_CharacterController {
     this.cameraTarget.y = this.model.position.y + 1;
     this.cameraTarget.z = this.model.position.z;
     this.#orbitControls.target = this.cameraTarget;
-  }
-  // Method to toggle between run and walk
-  switchRunToggle() {
-    this.toggleRun = !this.toggleRun;
   }
   setPostion(position) {
     this.rigidbody.setNextKinematicTranslation(position)
@@ -162,7 +140,7 @@ function handleAnimation(animationmap, stateController, nextState) {
 function updateModlePostion(model, position, quaternion) {
   // this.helperMesh.position.copy(this.collider.translation());
   model.position.copy(position)
-  model.position.setY(position.y - height / 2 - radius)
+  model.position.setY(position.y - height / 2 - radius - .05)
   model.quaternion.copy(quaternion)
 }
 

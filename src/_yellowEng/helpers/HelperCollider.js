@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 import * as RAPIER from '@dimforge/rapier3d';
-import * as CANNON from 'cannon-es'
 
 // RigidBody: 
 // 1. Represents the physical object's dynamics and kinematics.
@@ -14,7 +13,34 @@ import * as CANNON from 'cannon-es'
 // 3. Can be of various shapes, such as spheres, boxes, meshes, etc. 
 // RigidBody Must have colliders attached to it to interact with the physics world through collisions.
 
-export function makeCapsuleCollider(webgl, radius, height,debugName="Capsule") {
+
+
+
+export function makePlaneCollider(mesh, webgl) {
+    const geometry = mesh.geometry;
+    // Ensure bounding box is calculated
+    geometry.computeBoundingBox();
+    // Access bounding box
+    const boundingBox = geometry.boundingBox;
+
+    // Width and height from bounding box
+    const width = boundingBox.max.x - boundingBox.min.x;
+    const length = boundingBox.max.z - boundingBox.min.z;
+
+    const floorBodyDesc = RAPIER.RigidBodyDesc.fixed();
+    const rigidBody = webgl.physics.createRigidBody(floorBodyDesc);
+    rigidBody.setTranslation(mesh.position)
+    rigidBody.setRotation(mesh.quaternion)
+    // Create a floor collider (big box)
+    const floorColliderDesc = RAPIER.ColliderDesc.cuboid(width / 2, 0.05, length / 2);
+    const collider = webgl.physics.createCollider(floorColliderDesc, rigidBody)
+    if (import.meta.env.VITE_PHYSIS_DEBUG == "true") {
+        makeDebugMesh(webgl, collider)
+    }
+    return { rigidBody, collider }
+
+}
+export function makeCapsuleCollider(webgl, radius, height, debugName = "Capsule") {
     const rigidBody = webgl.physics.createRigidBody(
         RAPIER.RigidBodyDesc
             .kinematicPositionBased()
@@ -36,10 +62,18 @@ export function makeCapsuleCollider(webgl, radius, height,debugName="Capsule") {
     return { rigidBody, collider }
 }
 
+export function makeHelperMesh(webgl, radius, height, color = 0xff0000) {
+    const capsuleGeometry = new THREE.CapsuleGeometry(radius, height);
+    const capsuleMaterial = new THREE.MeshBasicMaterial({ color, wireframe: true });
+    const capsuleMesh = new THREE.Mesh(capsuleGeometry, capsuleMaterial);
+    webgl.addObject3D(capsuleMesh);
+    return capsuleMesh;
+}
+
 export async function makeGround(webgl, debugName = "Ground") {
     // Create a static floor body
     const floorBodyDesc = RAPIER.RigidBodyDesc.fixed();
-    const rigidBody = await webgl.physics.createRigidBody(floorBodyDesc);
+    const rigidBody = webgl.physics.createRigidBody(floorBodyDesc);
     rigidBody.userData = debugName
 
     // Create a floor collider (big box)
@@ -56,7 +90,7 @@ export async function makeGround(webgl, debugName = "Ground") {
     return { rigidBody, collider }
 }
 
-export function makeBoxCollider(webgl, width, height = width, depth = width,debugName="Box") {
+export function makeBoxCollider(webgl, width, height = width, depth = width, debugName = "Box") {
 
     const platformDesc = RAPIER.RigidBodyDesc
         .fixed()

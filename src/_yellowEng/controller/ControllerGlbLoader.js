@@ -1,5 +1,5 @@
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-// import { makePlaneCollider } from "../helpers/HelperCollider";
+import { makePlaneCollider } from "../helpers/HelperCollider";
 const loader = new GLTFLoader();
 export function modelLoader(url) {
     return new Promise((resolve, reject) => {
@@ -22,8 +22,8 @@ export async function addGltf(url, webgl) {
 export async function addGltfRigidbody(gltf, webgl) {
     for (let child of gltf.scene.children) {
         if (child.name.includes("Plane008")) {
-            // const rigidbody = makePlaneCollider(child)
-            // webgl.physics.addBody(rigidbody)
+            const rigidbody = makePlaneCollider(child, webgl)
+            webgl.physics.addBody(rigidbody)
         }
     }
 
