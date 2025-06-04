@@ -6,6 +6,9 @@ import { makeCapsuleCollider } from "../helpers/HelperCollider";
 import * as RAPIER from '@dimforge/rapier3d';
 import { makeHelperMesh } from "../helpers/HelperCollider";
 import { directionPressed, directionOffset, calWalkDirection, calRotation } from "../helpers/HelperMovement";
+import { drawLine } from "../creation/add";
+import { DebugNoramlLine } from "../controller/ControllerLine";
+
 
 export class CharacterState extends StateBase {
   static STATE = {
@@ -14,13 +17,18 @@ export class CharacterState extends StateBase {
     RUN: "run",
   };
 }
-
+const deg90 = 90 * Math.PI / 180
 const radius = .25
 const height = 1.30
 const fadeDuration = 0.2;
-const maxDistance = .01
+const maxDistance = .1
 const maxToi = .01;
-
+const line = drawLine(
+  new THREE.Vector3(0, 0, 0),
+  new THREE.Vector3(0, 10, 0),
+  0x00ffff
+);
+let debugline = null
 
 export default class Game_CharacterController {
   cameraTarget = new THREE.Vector3();
@@ -30,7 +38,9 @@ export default class Game_CharacterController {
   stateController = new CharacterState();
   currentAction = null;
   #orbitControls = null;
+  isGrounded = false;
   constructor(webgl, entity_charactor) {
+    debugline = new DebugNoramlLine(webgl)
     const self = this;
     const { rigidBody, collider } = makeCapsuleCollider(webgl, radius, height)
     // this.helperMesh = makeHelperMesh(webgl, radius, height)
@@ -45,6 +55,7 @@ export default class Game_CharacterController {
     webgl.add2Update(function (delta) {
       self.update(delta);
     });
+    webgl.addGizmo(line)
   }
   start() {
     this.updateCameraTarget(0, 0)
@@ -52,8 +63,13 @@ export default class Game_CharacterController {
   }
   update(delta) {
     const isMoving = directionPressed().length > 0;
-    const position = this.rigidbody.translation();
-    const quaternion = this.rigidbody.rotation();
+    const p = this.rigidbody.translation();
+    const q = this.rigidbody.rotation();
+    const position = new THREE.Vector3(p.x, p.y, p.z)
+    const quaternion = new THREE.Quaternion(q.x, q.y, q.z, q.w)
+    // this.rigidbody.setRotation({w: 0.707, x: .707, y: 0.707, z: 0.0}, true); // 3D
+    // rigidBody.setRotation({w: 0.707, x: 0.0, y: 0.707, z: 0.0}, true); // Rotate 90 degrees around the z-axis
+
     const walkDirection = calWalkDirection(this.camera);
     const rotateQuaternion = calRotation(this.camera.position, position);
     // Direction offset
@@ -63,6 +79,7 @@ export default class Game_CharacterController {
     const nextState = isMoving ? CharacterState.STATE.WALK : CharacterState.STATE.IDLE
     // Handle change in animation
     handleAnimation(this.animationmap, this.stateController, nextState)
+
     // Run/Walk Velocity
     const velocity =
       this.stateController.state == CharacterState.STATE.RUN ? this.runVelocity : this.walkVelocity;
@@ -74,7 +91,7 @@ export default class Game_CharacterController {
 
     const targetPos = {
       x: position.x,
-      y: position.y - .09,
+      y: position.y - 0.09,
       z: position.z,
     };
 
@@ -83,6 +100,9 @@ export default class Game_CharacterController {
       targetPos.z += moveZ;
       this.updateCameraTarget(moveX, moveZ);
       this.rigidbody.setNextKinematicRotation(rotateQuaternion);
+    }
+    else {
+      // this.updateCameraTarget(0, 0);
     }
 
     const desiredMove = new THREE.Vector3(Math.round(walkDirection.x), -0.09, Math.round(walkDirection.z)); // e.g., from input
@@ -100,12 +120,38 @@ export default class Game_CharacterController {
       this.collider,
       this.rigidbody);
     if (hit) {
+      const normal = new THREE.Vector3(
+        Number((hit.normal1.x).toFixed(2)),
+        Number((hit.normal1.y).toFixed(2)),
+        Number((hit.normal1.z).toFixed(2)))
+      let test = new THREE.Vector3(position.x, 0, position.z)
+
+
+
+      const angle = test.angleTo(normal);
+      console.log("angle", angle * 180 / Math.PI)
+      debugline.update(position, normal)
+
       const hitPosition = new THREE.Vector3(
         hit.witness1.x,
-        position.y,
+        hit.witness1.y + height / 2 + radius,
         hit.witness1.z
       )
-      if (isMoving) this.rigidbody.setNextKinematicTranslation(hitPosition)
+      if (isMoving) {
+        // const rotation = hit.collider.parent().rotation();
+        this.rigidbody.setNextKinematicTranslation(hitPosition)
+
+        const axis = new THREE.Vector3(1, 0, 0); // Z-axis
+        const angleInRadians = deg90 - angle ; // 90 degrees
+        const rotationQuaternion = new THREE.Quaternion();
+        rotationQuaternion.setFromAxisAngle(axis, angleInRadians);
+        console.log("quaternion", quaternion, rotationQuaternion,)
+        rotateQuaternion.multiply(rotationQuaternion)
+
+              this.rigidbody.setNextKinematicRotation(rotateQuaternion);
+
+        // this.rigidbody.setRotation(quaternion, true)
+      }
     }
     else {
       this.rigidbody.setNextKinematicTranslation(targetPos)

@@ -31,6 +31,8 @@ export function makePlaneCollider(mesh, webgl) {
     const rigidBody = webgl.physics.createRigidBody(floorBodyDesc);
     rigidBody.setTranslation(mesh.position)
     rigidBody.setRotation(mesh.quaternion)
+    rigidBody.userData = "Plane"
+
     // Create a floor collider (big box)
     const floorColliderDesc = RAPIER.ColliderDesc.cuboid(width / 2, 0.05, length / 2);
     const collider = webgl.physics.createCollider(floorColliderDesc, rigidBody)

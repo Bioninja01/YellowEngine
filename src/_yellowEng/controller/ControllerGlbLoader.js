@@ -22,8 +22,7 @@ export async function addGltf(url, webgl) {
 export async function addGltfRigidbody(gltf, webgl) {
     for (let child of gltf.scene.children) {
         if (child.name.includes("Plane008")) {
-            const rigidbody = makePlaneCollider(child, webgl)
-            webgl.physics.addBody(rigidbody)
+            makePlaneCollider(child, webgl)
         }
     }
 
